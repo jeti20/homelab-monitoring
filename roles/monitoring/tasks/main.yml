@@ -1,0 +1,36 @@
+---
+- name: Utwórz katalogi projektu
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ monitoring_dir }}"
+    - "{{ monitoring_dir }}/textfiles"
+    - "{{ monitoring_dir }}/prometheus"
+
+- name: Wygeneruj prometheus.yml
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: "{{ monitoring_dir }}/prometheus/prometheus.yml"
+    mode: '0644'
+  notify: Przeładuj Prometheus
+
+- name: Wygeneruj docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ monitoring_dir }}/docker-compose.yml"
+    mode: '0644'
+  notify: Zrestartuj stack
+
+- name: Skopiuj simulate.sh
+  ansible.builtin.copy:
+    src: simulate.sh
+    dest: "{{ monitoring_dir }}/simulate.sh"
+    mode: '0755'
+
+- name: Uruchom monitoring stack
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ monitoring_dir }}"
+  changed_when: false

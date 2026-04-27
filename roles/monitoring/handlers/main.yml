@@ -1,0 +1,10 @@
+---
+- name: Zrestartuj stack
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ monitoring_dir }}"
+
+- name: Przeładuj Prometheus
+  ansible.builtin.command:
+    cmd: docker compose restart prometheus
+    chdir: "{{ monitoring_dir }}"

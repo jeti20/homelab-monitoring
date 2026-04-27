@@ -1,0 +1,6 @@
+---
+- name: Wdrożenie homelab monitoring stack
+  hosts: all
+  become: true
+  roles:
+    - monitoring

@@ -1,0 +1,5 @@
+---
+monitoring_dir: /opt/homelab-monitoring
+grafana_admin_password: admin
+prometheus_scrape_interval: 15s
+prometheus_retention_time: 30d
