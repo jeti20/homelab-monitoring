@@ -1,9 +1,6 @@
 ---
-- name: Deploy homelab monitoring stack (native installation)
+- name: Deploy Node Exporter (test)
   hosts: all
   become: true
   roles:
     - node_exporter
-    - prometheus
-    - grafana
-    - simulate
