@@ -1,0 +1,16 @@
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User={{ node_exporter_user }}
+Group={{ node_exporter_user }}
+Type=simple
+ExecStart={{ node_exporter_install_dir }}/node_exporter \
+    --collector.textfile.directory={{ node_exporter_textfiles_dir }} \
+    --collector.disable-defaults \
+    --collector.textfile
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

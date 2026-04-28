@@ -1,0 +1,74 @@
+---
+# ─── Debian / Ubuntu ─────────────────────────────────────────────────────────
+
+- name: Utwórz katalog keyrings
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_os_family == "Debian"
+
+- name: Pobierz klucz GPG Grafany
+  ansible.builtin.get_url:
+    url: https://apt.grafana.com/gpg.key
+    dest: /etc/apt/keyrings/grafana.asc
+    mode: '0644'
+  when: ansible_os_family == "Debian"
+
+- name: Dodaj repozytorium Grafany (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  when: ansible_os_family == "Debian"
+
+- name: Zainstaluj Grafanę (Debian)
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+# ─── RedHat / CentOS ─────────────────────────────────────────────────────────
+
+- name: Dodaj repozytorium Grafany (RedHat)
+  ansible.builtin.yum_repository:
+    name: grafana
+    description: Grafana
+    baseurl: https://rpm.grafana.com
+    repo_gpgcheck: true
+    gpgcheck: true
+    gpgkey: https://rpm.grafana.com/gpg.key
+    enabled: true
+  when: ansible_os_family == "RedHat"
+
+- name: Zainstaluj Grafanę (RedHat)
+  ansible.builtin.dnf:
+    name: grafana
+    state: present
+  when: ansible_os_family == "RedHat"
+
+# ─── Konfiguracja (wspólna) ───────────────────────────────────────────────────
+
+- name: Utwórz katalog override dla grafana-server
+  ansible.builtin.file:
+    path: /etc/systemd/system/grafana-server.service.d
+    state: directory
+    mode: '0755'
+
+- name: Ustaw zmienne środowiskowe Grafany (override systemd)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/grafana-server.service.d/override.conf
+    content: |
+      [Service]
+      Environment="GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}"
+      Environment="GF_USERS_ALLOW_SIGN_UP=false"
+    mode: '0644'
+  notify: Zrestartuj grafana
+
+- name: Włącz i uruchom grafana-server
+  ansible.builtin.systemd:
+    name: grafana-server
+    enabled: true
+    state: started
+    daemon_reload: true

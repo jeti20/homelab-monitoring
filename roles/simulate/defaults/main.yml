@@ -1,0 +1,3 @@
+---
+simulate_install_dir: /usr/local/bin
+simulate_textfiles_dir: /var/lib/node_exporter/textfiles

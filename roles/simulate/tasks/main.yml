@@ -1,0 +1,8 @@
+---
+- name: Zainstaluj simulate.sh
+  ansible.builtin.template:
+    src: simulate.sh.j2
+    dest: "{{ simulate_install_dir }}/simulate.sh"
+    owner: root
+    group: root
+    mode: '0755'

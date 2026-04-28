@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# Symuluje skrypt z 3 możliwymi rezultatami i zapisuje metryki do pliku .prom
+# Uruchamiaj wielokrotnie żeby zobaczyć zmiany w Grafanie.
+#
+# Użycie:
+#   simulate.sh           <- losowy rezultat
+#   simulate.sh success   <- wymusz sukces
+#   simulate.sh no_result <- wymusz brak rezultatu
+#   simulate.sh error     <- wymusz błąd
+
+TEXTFILE_DIR="{{ simulate_textfiles_dir }}"
+METRICS_FILE="$TEXTFILE_DIR/my_script.prom"
+TEMP_FILE="${METRICS_FILE}.tmp"
+
+mkdir -p "$TEXTFILE_DIR"
+
+# ─── Symulowana logika skryptu ───────────────────────────────────────────────
+
+forced="${1:-}"
+
+if [[ -n "$forced" ]]; then
+    outcome="$forced"
+else
+    # Losuj: 60% sukces, 20% brak rezultatu, 20% błąd
+    roll=$((RANDOM % 10))
+    if   (( roll < 6 )); then outcome="success"
+    elif (( roll < 8 )); then outcome="no_result"
+    else                       outcome="error"
+    fi
+fi
+
+echo "[simulate.sh] Rezultat: $outcome"
+
+case "$outcome" in
+    success)
+        exit_status=0
+        ;;
+    no_result)
+        exit_status=1
+        ;;
+    error)
+        exit_status=2
+        ;;
+    *)
+        echo "Nieznany rezultat: $outcome" >&2
+        exit 1
+        ;;
+esac
+
+# ─── Zapis metryk (atomowy: temp -> mv) ──────────────────────────────────────
+
+timestamp=$(date +%s)
+
+cat > "$TEMP_FILE" <<EOF
+# HELP my_script_last_exit_status Status ostatniego uruchomienia: 0=sukces 1=brak_rezultatu 2=blad
+# TYPE my_script_last_exit_status gauge
+my_script_last_exit_status $exit_status
+
+# HELP my_script_last_run_timestamp_seconds Timestamp ostatniego uruchomienia
+# TYPE my_script_last_run_timestamp_seconds gauge
+my_script_last_run_timestamp_seconds $timestamp
+EOF
+
+mv "$TEMP_FILE" "$METRICS_FILE"
+
+echo "[simulate.sh] Zapisano metryki do $METRICS_FILE"

@@ -1,0 +1,9 @@
+---
+- name: Wdrożenie homelab monitoring stack (natywna instalacja)
+  hosts: all
+  become: true
+  roles:
+    - node_exporter
+    - prometheus
+    - grafana
+    - simulate
