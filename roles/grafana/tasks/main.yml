@@ -1,28 +1,28 @@
 ---
 # ─── Debian / Ubuntu ─────────────────────────────────────────────────────────
 
-- name: Utwórz katalog keyrings
+- name: Create keyrings directory
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
     mode: '0755'
   when: ansible_os_family == "Debian"
 
-- name: Pobierz klucz GPG Grafany
+- name: Download Grafana GPG key
   ansible.builtin.get_url:
     url: https://apt.grafana.com/gpg.key
     dest: /etc/apt/keyrings/grafana.asc
     mode: '0644'
   when: ansible_os_family == "Debian"
 
-- name: Dodaj repozytorium Grafany (Debian)
+- name: Add Grafana repository (Debian)
   ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
     state: present
     filename: grafana
   when: ansible_os_family == "Debian"
 
-- name: Zainstaluj Grafanę (Debian)
+- name: Install Grafana (Debian)
   ansible.builtin.apt:
     name: grafana
     state: present
@@ -31,7 +31,7 @@
 
 # ─── RedHat / CentOS ─────────────────────────────────────────────────────────
 
-- name: Dodaj repozytorium Grafany (RedHat)
+- name: Add Grafana repository (RedHat)
   ansible.builtin.yum_repository:
     name: grafana
     description: Grafana
@@ -42,21 +42,21 @@
     enabled: true
   when: ansible_os_family == "RedHat"
 
-- name: Zainstaluj Grafanę (RedHat)
+- name: Install Grafana (RedHat)
   ansible.builtin.dnf:
     name: grafana
     state: present
   when: ansible_os_family == "RedHat"
 
-# ─── Konfiguracja (wspólna) ───────────────────────────────────────────────────
+# ─── Common configuration ────────────────────────────────────────────────────
 
-- name: Utwórz katalog override dla grafana-server
+- name: Create grafana-server systemd override directory
   ansible.builtin.file:
     path: /etc/systemd/system/grafana-server.service.d
     state: directory
     mode: '0755'
 
-- name: Ustaw zmienne środowiskowe Grafany (override systemd)
+- name: Configure Grafana environment (systemd override)
   ansible.builtin.copy:
     dest: /etc/systemd/system/grafana-server.service.d/override.conf
     content: |
@@ -64,9 +64,9 @@
       Environment="GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}"
       Environment="GF_USERS_ALLOW_SIGN_UP=false"
     mode: '0644'
-  notify: Zrestartuj grafana
+  notify: Restart grafana
 
-- name: Włącz i uruchom grafana-server
+- name: Enable and start grafana-server
   ansible.builtin.systemd:
     name: grafana-server
     enabled: true

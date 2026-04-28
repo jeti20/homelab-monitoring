@@ -1,5 +1,5 @@
 ---
-- name: Zainstaluj simulate.sh
+- name: Deploy simulate.sh
   ansible.builtin.template:
     src: simulate.sh.j2
     dest: "{{ simulate_install_dir }}/simulate.sh"

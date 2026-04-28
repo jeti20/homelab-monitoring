@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Symuluje skrypt z 3 możliwymi rezultatami i zapisuje metryki do pliku .prom
-# Uruchamiaj wielokrotnie żeby zobaczyć zmiany w Grafanie.
+# Simulates a script with 3 possible outcomes and writes metrics to a .prom file.
+# Run repeatedly to observe changes in Grafana.
 #
-# Użycie:
-#   simulate.sh           <- losowy rezultat
-#   simulate.sh success   <- wymusz sukces
-#   simulate.sh no_result <- wymusz brak rezultatu
-#   simulate.sh error     <- wymusz błąd
+# Usage:
+#   simulate.sh           <- random outcome
+#   simulate.sh success   <- force success
+#   simulate.sh no_result <- force no result
+#   simulate.sh error     <- force error
 
 TEXTFILE_DIR="{{ simulate_textfiles_dir }}"
 METRICS_FILE="$TEXTFILE_DIR/my_script.prom"
@@ -15,14 +15,14 @@ TEMP_FILE="${METRICS_FILE}.tmp"
 
 mkdir -p "$TEXTFILE_DIR"
 
-# ─── Symulowana logika skryptu ───────────────────────────────────────────────
+# ─── Simulated script logic ───────────────────────────────────────────────────
 
 forced="${1:-}"
 
 if [[ -n "$forced" ]]; then
     outcome="$forced"
 else
-    # Losuj: 60% sukces, 20% brak rezultatu, 20% błąd
+    # Random: 60% success, 20% no_result, 20% error
     roll=$((RANDOM % 10))
     if   (( roll < 6 )); then outcome="success"
     elif (( roll < 8 )); then outcome="no_result"
@@ -30,7 +30,7 @@ else
     fi
 fi
 
-echo "[simulate.sh] Rezultat: $outcome"
+echo "[simulate.sh] Outcome: $outcome"
 
 case "$outcome" in
     success)
@@ -43,25 +43,25 @@ case "$outcome" in
         exit_status=2
         ;;
     *)
-        echo "Nieznany rezultat: $outcome" >&2
+        echo "Unknown outcome: $outcome" >&2
         exit 1
         ;;
 esac
 
-# ─── Zapis metryk (atomowy: temp -> mv) ──────────────────────────────────────
+# ─── Write metrics (atomic: write to tmp then mv) ────────────────────────────
 
 timestamp=$(date +%s)
 
 cat > "$TEMP_FILE" <<EOF
-# HELP my_script_last_exit_status Status ostatniego uruchomienia: 0=sukces 1=brak_rezultatu 2=blad
+# HELP my_script_last_exit_status Last run outcome: 0=success 1=no_result 2=error
 # TYPE my_script_last_exit_status gauge
 my_script_last_exit_status $exit_status
 
-# HELP my_script_last_run_timestamp_seconds Timestamp ostatniego uruchomienia
+# HELP my_script_last_run_timestamp_seconds Unix timestamp of the last run
 # TYPE my_script_last_run_timestamp_seconds gauge
 my_script_last_run_timestamp_seconds $timestamp
 EOF
 
 mv "$TEMP_FILE" "$METRICS_FILE"
 
-echo "[simulate.sh] Zapisano metryki do $METRICS_FILE"
+echo "[simulate.sh] Metrics written to $METRICS_FILE"

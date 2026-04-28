@@ -1,5 +1,5 @@
 ---
-- name: Wdrożenie homelab monitoring stack (natywna instalacja)
+- name: Deploy homelab monitoring stack (native installation)
   hosts: all
   become: true
   roles:
